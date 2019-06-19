@@ -1,10 +1,4 @@
-from sqlalchemy import (
-    Column,
-    ForeignKey,
-    Integer,
-    Text,
-    JSON,
-)
+from sqlalchemy import Column, ForeignKey, Integer, Text, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy.schema import MetaData
@@ -18,7 +12,7 @@ NAMING_CONVENTION = {
     "uq": "uq_%(table_name)s_%(column_0_name)s",
     "ck": "ck_%(table_name)s_%(constraint_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s"
+    "pk": "pk_%(table_name)s",
 }
 
 
@@ -27,7 +21,7 @@ Base = declarative_base(metadata=metadata)
 
 
 class Job(Base):
-    __tablename__ = 'job'
+    __tablename__ = "job"
 
     id = Column(Integer, primary_key=True)
     job_id = Column(Text, unique=True)  # TODO: wants index
@@ -45,6 +39,7 @@ class Job(Base):
 
     # celery task ids
     task_ids = Column(JSON)
+
 
 # Index('my_index', MyModel.name, unique=True, mysql_length=255)
 

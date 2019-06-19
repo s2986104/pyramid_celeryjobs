@@ -10,19 +10,23 @@ app = Celery()
 
 def add_worker_arguments(parser):
     parser.add_argument(
-        '--ini', action='store', default=False,
-        help='Point to pyramid ini file, or use # to point to a specific section with celery options.',
+        "--ini",
+        action="store",
+        default=False,
+        help="Point to pyramid ini file, or use # to point to a specific section with celery options.",
     ),
-app.user_options['preload'].add(add_worker_arguments)
-#app.user_options['worker'].add(add_worker_arguments)
-#app.user_options['beat'].add(add_worker_arguments)
+
+
+app.user_options["preload"].add(add_worker_arguments)
+# app.user_options['worker'].add(add_worker_arguments)
+# app.user_options['beat'].add(add_worker_arguments)
 
 
 @signals.user_preload_options.connect
 def handle_preload_options(options, **kwargs):
     # kwargs: app, sender, signal
-    if options['ini']:
-        configure_celery(options['ini'], kwargs['app'])
+    if options["ini"]:
+        configure_celery(options["ini"], kwargs["app"])
 
 
 def configure_celery(settings, app=app):
@@ -35,13 +39,14 @@ def configure_celery(settings, app=app):
         settings = loader.get_settings()
         if not settings:
             # try 'celery' section
-            settings.update(loader.get_settings('celery'))
+            settings.update(loader.get_settings("celery"))
     # type conversion
     from celery.app.defaults import NAMESPACES
+
     for key, val in settings.items():
         # TODO: look into supporting tuple / dict options here as well
         #       and non-namespaced options like include / import
-        ns, name = key.split('_', 1)
+        ns, name = key.split("_", 1)
         val = NAMESPACES[ns.lower()][name.lower()].to_python(val)
         settings[key] = val
     # apply config
@@ -56,17 +61,17 @@ def on_celeryd_init(sender, instance, conf, options, **kwargs):
     """
     # global _PYRAMID_REGISTRY, _PYRAMID_CLOSER
     try:
-        if 'ini' in options:
-            if conf.get('PYRAMID_REGISTRY') is not None:
-                warnings.warn('Can not initialise celery multiple times')
+        if "ini" in options:
+            if conf.get("PYRAMID_REGISTRY") is not None:
+                warnings.warn("Can not initialise celery multiple times")
             # bootstrap pyramid app
-            env = bootstrap(options['ini'])
-            conf['PYRAMID_REGISTRY'] = env['registry']
-            conf['PYRAMID_CLOSER'] = env['closer']
+            env = bootstrap(options["ini"])
+            conf["PYRAMID_REGISTRY"] = env["registry"]
+            conf["PYRAMID_CLOSER"] = env["closer"]
             # _PYRAMID_REGISTRY = env['registry']
             # _PYRAMID_CLOSER = env['closer']
     except Exception as e:
-        warnings.warn('Error initialising Pyramid: {}'.format(e))
+        warnings.warn("Error initialising Pyramid: {}".format(e))
 
 
 # TODO: the following signals would be nice to have to setup a pyramid
@@ -122,4 +127,3 @@ def on_celeryd_init(sender, instance, conf, options, **kwargs):
 #     import ipdb; idpb.set_trace()
 #     #from celery.contrib import rdb; rdb.set_trace()
 #     #_PYRAMID_CLOSER()
-

@@ -7,7 +7,6 @@ from .models import Job
 # TODO: dbsessions in post commit hook?
 # TODO: errors in db comm in post coomit?
 def submit_task(request, task):
-
     def submit_task_hook(success):
         if not success:
             return
@@ -22,7 +21,6 @@ def submit_task(request, task):
 #       what if task is realy realy fast and updates dbfile first?
 def submit_job(request, task):
     # TODO: check task result ignored?
-
 
     # return a new job object to track task
     # this will also schedule task to be submittedon transaction commit
@@ -40,20 +38,20 @@ def submit_job(request, task):
         #       taks begins and commits a transaction
         #       and here we are in the middle of a transaction
         result = task.delay()
-        log.info('Job {} submitted.'.format(job_id))
+        log.info("Job {} submitted.".format(job_id))
         # we need to start a new transaction
         request.tm.begin()
         # add job to session
         request.dbsession.add(job)
         request.dbsession.refresh(job)  # make sure we have the latest state
         # update job.task_ids
-        job.state = 'SUBMITTED'
+        job.state = "SUBMITTED"
         job.task_ids = chain_task_ids(result)
         # TODO: try catch commit
         request.tm.commit()
         # we can't use job.job_id here, because transaction commit
         # closes the session (maybe expunge job from session?)
-        log.info('Job {} state submitted.'.format(job_id))
+        log.info("Job {} state submitted.".format(job_id))
 
     request.dbsession.add(job)
     request.tm.get().addAfterCommitHook(submit_job_hook)

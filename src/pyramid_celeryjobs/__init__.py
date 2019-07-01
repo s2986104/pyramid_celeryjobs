@@ -11,4 +11,4 @@ def includeme(config):
     # import pyramid_celeryjobs.models  # noqa
     config.add_directive("configure_celery", configure)
     config.include(".routes")
-    config.scan(".views")
+    config.scan()

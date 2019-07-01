@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from .models import Job
@@ -21,10 +22,10 @@ def submit_task(request, task):
 #       what if task is realy realy fast and updates dbfile first?
 def submit_job(request, task):
     # TODO: check task result ignored?
-
+    log = logging.getLogger(__name__)
     # return a new job object to track task
     # this will also schedule task to be submittedon transaction commit
-    job_id = uuid.uuid1()
+    job_id = str(uuid.uuid1())
     userid = request.authenticated_userid
     job = Job(job_id=job_id, owner=userid)
 

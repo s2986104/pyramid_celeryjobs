@@ -1,8 +1,11 @@
+import json
 import warnings
 
 from celery import Celery, signals
+from celery.app.defaults import NAMESPACES
 from pyramid.paster import bootstrap
 from pyramid.scripts.common import get_config_loader
+from pyramid.util import DottedNameResolver
 
 
 app = Celery()
@@ -14,12 +17,10 @@ def add_worker_arguments(parser):
         action="store",
         default=False,
         help="Point to pyramid ini file, or use # to point to a specific section with celery options.",
-    ),
+    )
 
 
 app.user_options["preload"].add(add_worker_arguments)
-# app.user_options['worker'].add(add_worker_arguments)
-# app.user_options['beat'].add(add_worker_arguments)
 
 
 @signals.user_preload_options.connect
@@ -27,6 +28,75 @@ def handle_preload_options(options, **kwargs):
     # kwargs: app, sender, signal
     if options["ini"]:
         configure_celery(options["ini"], kwargs["app"])
+
+
+def _parse_use_ssl(opt, val):
+    # TODO: return True / False / or parsed json
+    try:
+        return opt.to_python(val)
+    except TypeError:
+        # it is not a valid bool string
+        pass
+    # still here? ... try json decode and return a dict
+    ret = json.loads(val)
+    ret['cert_reqs'] = DottedNameResolver().resolve(ret['cert_reqs'])
+    return ret
+
+
+def _parse_schedule(opt, val):
+    resolver = DottedNameResolver()
+    val = json.loads(val)
+    for key, entry in val.items():
+        if isinstance(entry['schedule'], dict):
+            schedule = resolver.resolve(entry['schedule']['factory'])(
+                *entry['schedule'].get('args', ()),
+                **entry['schedule'].get('kwargs', {})
+            )
+        else:
+            schedule = float(entry['schedule'])
+        entry['schedule'] = schedule
+    return val
+
+
+def _parse_ini_val(opt, val):
+    # parses a string coming from ini file with a celery option into a python
+    # data type
+    # TODO: exception handlig / throwing / validation?
+    if opt.type == 'tuple':
+        return tuple(v.strip() for v in val.split('\n') if v.strip())
+    if opt.type in ('dict', 'any'):
+        # TODO: parse types?
+        #       e.g. schedule vs crontab?
+        val = json.loads(val)
+        for item in val.values():
+            item.pop('crontab', None)
+        return val
+    return opt.to_python(val)
+
+
+def _parse_celery_settings(settings):
+    # parse celery settings and update values in settings dict (also return it)
+    # settings comes directly from an ini file. It is a dictionary with keys to string.
+    # dictionaries are json encoded and lists/tuples are new line separated.
+
+    PARSER = {
+        ('broker', 'use_ssl'): _parse_use_ssl,
+        ('beat', 'schedule'): _parse_schedule,
+    }
+
+    for key, val in settings.items():
+        if key.lower() in NAMESPACES:
+            # no split required
+            val = _parse_ini_val(NAMESPACES[key.lower()], val)
+        else:
+            ns, name = key.split("_", 1)
+            parse_func = PARSER.get((ns.lower(), name.lower()), _parse_ini_val)
+            val = parse_func(
+                NAMESPACES[ns.lower()][name.lower()],
+                val
+            )
+        settings[key] = val
+    return settings
 
 
 def configure_celery(settings, app=app):
@@ -41,14 +111,7 @@ def configure_celery(settings, app=app):
             # try 'celery' section
             settings.update(loader.get_settings("celery"))
     # type conversion
-    from celery.app.defaults import NAMESPACES
-
-    for key, val in settings.items():
-        # TODO: look into supporting tuple / dict options here as well
-        #       and non-namespaced options like include / import
-        ns, name = key.split("_", 1)
-        val = NAMESPACES[ns.lower()][name.lower()].to_python(val)
-        settings[key] = val
+    _parse_celery_settings(settings)
     # apply config
     app.conf.update(settings)
 

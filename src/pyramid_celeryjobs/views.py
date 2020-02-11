@@ -7,7 +7,7 @@ from .resources import VIEW
 def result_to_dict(result):
     # TODO: add job details endpoint where we include this (for admins)
     # import ipdb; ipdb.set_trace()
-    # TODO: cane we get task name?
+    # TODO: can we get task name?
     #       no we can't :( ...
     #       maybe rethink info we get from here
     if result.ready():

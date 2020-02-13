@@ -8,7 +8,7 @@ with open(os.path.join(here, "README.rst")) as f:
 with open(os.path.join(here, "CHANGES.rst")) as f:
     CHANGES = f.read()
 
-requires = ["celery", "pyramid", "SQLAlchemy"]
+requires = ["celery", "pyramid", "pyramid_cors", "SQLAlchemy"]
 
 tests_require = ["WebTest >= 1.3.1", "pytest >= 3.7.4", "pytest-cov"]  # py3 compat
 

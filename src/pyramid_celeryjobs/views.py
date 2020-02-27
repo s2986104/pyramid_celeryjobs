@@ -1,4 +1,5 @@
 from pyramid.view import view_config
+from pyramid.response import Response
 
 from . import models
 from .resources import VIEW
@@ -43,14 +44,6 @@ def job_to_dict(dbjob):
     openapi=True,
     permission=VIEW,
 )
-@view_config(
-    route_name="jobs",
-    request_method="OPTIONS",
-    renderer="json",
-    cors=True,
-    openapi=True,
-    permission=VIEW,
-)
 def jobs_list(request):
     # TODO: ... I want some cut off here... don't show ancient jobs
     # TODO: ... maybe move listing jobs to resource?
@@ -69,6 +62,23 @@ def jobs_list(request):
         jobs.append(job_to_dict(job))
     return jobs
 
+@view_config(
+    route_name="jobs",
+    request_method="OPTIONS",
+    renderer="json",
+    cors=True,
+    openapi=True,
+    permission=VIEW,
+)
+def options_jobs_list(request):
+    res = Response('OK', status=200)
+    res.header_list = [
+        ('Content-Type', 'application/json'),
+        ('Access-Control-Allow-Origin', '*'),
+        ('Access-Control-Allow-Methods', 'GET, OPTIONS'),
+        ('Access-Control-Allow-Headers', 'Content-Type, Origin, Authorization')
+    ]
+    return res
 
 @view_config(
     route_name="job",

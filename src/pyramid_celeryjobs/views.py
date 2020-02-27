@@ -43,6 +43,14 @@ def job_to_dict(dbjob):
     openapi=True,
     permission=VIEW,
 )
+@view_config(
+    route_name="jobs",
+    request_method="OPTIONS",
+    renderer="json",
+    cors=True,
+    openapi=True,
+    permission=VIEW,
+)
 def jobs_list(request):
     # TODO: ... I want some cut off here... don't show ancient jobs
     # TODO: ... maybe move listing jobs to resource?

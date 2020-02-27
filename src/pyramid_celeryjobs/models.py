@@ -5,7 +5,7 @@ from sqlalchemy.schema import MetaData
 
 
 # Recommended naming convention used by Alembic, as various different database
-# providers will autogenerate vastly different names making migrations more
+# providers will auto-generate vastly different names making migrations more
 # difficult. See: http://alembic.zzzcomputing.com/en/latest/naming.html
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",

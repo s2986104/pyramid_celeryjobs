@@ -3,16 +3,16 @@
 design decision:
 ----------------
 - assume some persistent result backend otherwise job tracking will get tricky
-  TODO: we halso have a job object ... how to update that? on read? on beat?
+  TODO: we also have a job object ... how to update that? on read? on beat?
         with completion event hooks?
 
 
-Package to configure Celery and track tasks realiably
+Package to configure Celery and track tasks reliably
 =====================================================
 
 - configure celery from ini file
 - configure celery worker with pyramid context from same ini file
-  -> design decicsion: worker will always have a pyramid registry available
+  -> design decision: worker will always have a pyramid registry available
      if a worker does not need that, it does not need this package
      => maybe this pkg will provide some sort of disable pyramid integration
         to make celery worker configuration easier

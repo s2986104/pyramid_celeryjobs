@@ -71,7 +71,7 @@ def jobs_list(request):
     permission=VIEW,
 )
 def options_jobs_list(request):
-    res = Response('OK', status=200)
+    res = Response(None, status=204)
     res.header_list = [
         ('Content-Type', 'application/json'),
         ('Access-Control-Allow-Origin', '*'),
